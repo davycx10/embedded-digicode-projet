@@ -43,46 +43,50 @@ void buzzer_play_tone(int freq, int duration_ms) {
 
 
 // Définition des broches de l'Arduino connectées au clavier
-const byte LIGNES = 4; // Nombre de lignes
-const byte COLONNES = 4; // Nombre de colonnes
+const byte LIGNES = 4; // number of lignes
+const byte COL = 4; // Number of columns
 // Tableau qui représente les touches du clavier
-char touches[LIGNES][COLONNES] = {
+char touches[LIGNES][COL] = {
     {'1', '2', '3', 'A'},
     {'4', '5', '6', 'B'},
     {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
+    {'*', '0', '#', 'D'}
+  };
 
-// Broches pour les lignes (en mode OUTPUT)
-byte brochesLignes[LIGNES] = {2, 3, 4, 5};
+// Pins for lines (in OUTPUT mode)
+byte PinLignes[LIGNES] = {2, 3, 4, 5};
 // Broches pour les colonnes (en mode INPUT_PULLUP)
-byte brochesColonnes[COLONNES] = {6, 7, 8, 9};
+byte PinCol[COL] = {6, 7, 8, 9};
 void setup()
 {
-
+  // Initializing the buzzer
   buzzer_init();
   // pinMode(TFT_BL, OUTPUT);
   // digitalWrite(TFT_BL, HIGH); // rétroéclairage allumé
 
-  tft.begin();
-  tft.fillScreen(ILI9341_WHITE);
-  tft.setTextColor(ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setCursor(10, 10);
-  // Initialisation de la communication série pour l'affichage
+  // tft.begin();
+  // tft.fillScreen(ILI9341_WHITE);
+  // tft.setTextColor(ILI9341_BLACK);
+  // tft.setTextSize(1);
+  // tft.setCursor(10, 10);
+
+  // Initializing serial communication for display
   Serial.begin(9600);
-  Serial.println("Scanner de clavier 4x4 pret.");
+  Serial.println("4x4 keyboard scanner ready.");
   tft.println("yosh.");
-  // Configuration des broches des lignes en sortie
+
+  // Output line pin configuration
   for (int i = 0; i < LIGNES; i++)
   {
-    pinMode(brochesLignes[i], OUTPUT);
-    digitalWrite(brochesLignes[i], HIGH); // On désactive toutes les lignes au départ
+    pinMode(PinLignes[i], OUTPUT);
+    digitalWrite(PinLignes[i], HIGH); // All lines are disabled at departure.
   }
-  // Configuration des broches des colonnes en entrée avec résistance de rappel interne
-  // Cela maintient les colonnes à l'état HAUT par défaut
-  for (int i = 0; i < COLONNES; i++)
+
+  // Pin configuration of input columns with internal pull-up resistor
+  // This keeps the columns in the HIGH state by default
+  for (int i = 0; i < COL; i++)
   {
-    pinMode(brochesColonnes[i], INPUT_PULLUP);
+    pinMode(PinCol[i], INPUT_PULLUP);
   }
 }
 void loop()
@@ -90,36 +94,38 @@ void loop()
   // On parcourt chaque ligne une par une
   for (int ligne = 0; ligne < LIGNES; ligne++)
   {
-    // 1. On active la ligne actuelle en la mettant à l'état BAS
-    // Une seule ligne est active (BAS) à la fois
-    digitalWrite(brochesLignes[ligne], LOW);
-    // 2. On vérifie toutes les colonnes pour cette ligne active
-    for (int colonne = 0; colonne < COLONNES; colonne++)
+    // 1. Activate the current line by setting it to LOW.
+    // Only one line can be active (LOW) at a time.
+    digitalWrite(PinLignes[ligne], LOW);
+    // 2. Check all columns for this active row
+    for (int columns = 0; columns < COL; columns++)
     {
-      // Si on lit un état BAS sur une colonne, cela veut dire qu'une touche est pressée
-      // La touche pressée connecte la ligne (LOW) à la colonne (qui était HIGH grâce à PULLUP)
-      if (digitalRead(brochesColonnes[colonne]) == LOW)
+      // If a LOW state is read on a column, it means that a key is pressed.
+      // The pressed key connects the row (LOW) to the column (which was HIGH thanks to PULLUP).
+      if (digitalRead(PinCol[columns]) == LOW)
       {
         // On affiche la touche qui a été pressée
         Serial.print("Touche pressee : ");
-        Serial.println(touches[ligne][colonne]);
+        Serial.println(touches[ligne][columns]);
 
         
-        tft.print("touch pressed : ");
-        tft.println(touches[ligne][colonne]);
+
         buzzer_play_tone(440, 100);
 
-        // Petite pause pour l'anti-rebond (debounce) et éviter les lectures multiples
+        // Short pause for debounce and to avoid multiple readings
         delay(250);
         
         
       }
     }
-    // 3. On désactive la ligne actuelle avant de passer à la suivante
-    // C'est très important pour ne pas scanner plusieurs lignes en même temps
-    digitalWrite(brochesLignes[ligne], HIGH);
+    // 3. We disable the current line before moving on to the next one.
+    // This is very important to avoid scanning multiple lines at the same time.
+    digitalWrite(PinLignes[ligne], HIGH);
   }
 }
+
+
+
 // Le loop() recommence indéfiniment, scannant le clavier en continu
 
 
