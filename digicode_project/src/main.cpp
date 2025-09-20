@@ -1,32 +1,40 @@
 #include <Arduino.h>
-
-#include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
 #include "hardware/pio.h"
 
 
 
+// define secret code
 
-#define TFT_CS    17
-#define TFT_DC    3
-#define TFT_RST   6
-#define TFT_BL    2
+const char* secret_code = "123A";     // secrect code 
+char Inputcode[5] = {0};              // buffer for input user
+int inputPosition = 0;                // Track how many digits have already been entered in the buffer
+
+// timer for delay
+
+unsigned long lastTime = 0;
+const unsigned long Timeout = 10000;   // limit time
+
+// define keyboard matix 4x4
+
+const byte ROW = 4;
+const byte COLS = 4;
+
+char touch[ROW][COLS] = {
+    {'1', '2', '3', 'A'},
+    {'4', '5', '6', 'B'},
+    {'7', '8', '9', 'C'},
+    {'*', '0', '#', 'D'}
+};
+
+byte PinROWS[ROW] = {2, 3, 4, 5};
+byte PinCOLS[COLS] = {6, 7, 8, 9};
 
 
-
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
-
-#define NUM_LEDS 4
-#define WS2812_PIN 1
-
-
-
+// define buzzer
 
 #define BUZZER_PIN 27
 
-
-void buzzer_init() {
+void buzzer_init(){
     gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
 }
 
@@ -42,124 +50,99 @@ void buzzer_play_tone(int freq, int duration_ms) {
 }
 
 
-// Définition des broches de l'Arduino connectées au clavier
-const byte LIGNES = 4; // number of lignes
-const byte COL = 4; // Number of columns
-// Tableau qui représente les touches du clavier
-char touches[LIGNES][COL] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}
-  };
+// reset input
 
-// Pins for lines (in OUTPUT mode)
-byte PinLignes[LIGNES] = {2, 3, 4, 5};
-// Broches pour les colonnes (en mode INPUT_PULLUP)
-byte PinCol[COL] = {6, 7, 8, 9};
-void setup()
-{
-  // Initializing the buzzer
-  buzzer_init();
-  // pinMode(TFT_BL, OUTPUT);
-  // digitalWrite(TFT_BL, HIGH); // rétroéclairage allumé
-
-  // tft.begin();
-  // tft.fillScreen(ILI9341_WHITE);
-  // tft.setTextColor(ILI9341_BLACK);
-  // tft.setTextSize(1);
-  // tft.setCursor(10, 10);
-
-  // Initializing serial communication for display
-  Serial.begin(9600);
-  Serial.println("4x4 keyboard scanner ready.");
-  tft.println("yosh.");
-
-  // Output line pin configuration
-  for (int i = 0; i < LIGNES; i++)
-  {
-    pinMode(PinLignes[i], OUTPUT);
-    digitalWrite(PinLignes[i], HIGH); // All lines are disabled at departure.
-  }
-
-  // Pin configuration of input columns with internal pull-up resistor
-  // This keeps the columns in the HIGH state by default
-  for (int i = 0; i < COL; i++)
-  {
-    pinMode(PinCol[i], INPUT_PULLUP);
-  }
+void resetInput(){
+    inputPosition = 0;
+    memset(Inputcode, 0, sizeof(Inputcode));
+    Serial.println("Enter Code :");
 }
-void loop()
-{
-  // On parcourt chaque ligne une par une
-  for (int ligne = 0; ligne < LIGNES; ligne++)
-  {
-    // 1. Activate the current line by setting it to LOW.
-    // Only one line can be active (LOW) at a time.
-    digitalWrite(PinLignes[ligne], LOW);
-    // 2. Check all columns for this active row
-    for (int columns = 0; columns < COL; columns++)
+
+// valide  the code
+void validateCode(){
+    if (strcmp(Inputcode, secret_code) == 0)
     {
-      // If a LOW state is read on a column, it means that a key is pressed.
-      // The pressed key connects the row (LOW) to the column (which was HIGH thanks to PULLUP).
-      if (digitalRead(PinCol[columns]) == LOW)
-      {
-        // On affiche la touche qui a été pressée
-        Serial.print("Touche pressee : ");
-        Serial.println(touches[ligne][columns]);
-
-        
-
-        buzzer_play_tone(440, 100);
-
-        // Short pause for debounce and to avoid multiple readings
-        delay(250);
-        
-        
-      }
+        Serial.println("Code Accept, good job looser");
+        buzzer_play_tone(440, 500);
+    } else {
+        Serial.println("Code reject looser");
+        buzzer_play_tone(220, 500);
     }
-    // 3. We disable the current line before moving on to the next one.
-    // This is very important to avoid scanning multiple lines at the same time.
-    digitalWrite(PinLignes[ligne], HIGH);
-  }
+
+    delay(2000);
+    resetInput();
+    
 }
-
-
-
-// Le loop() recommence indéfiniment, scannant le clavier en continu
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// put function declarations here:
-int myFunction(int, int);
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+    buzzer_init();
+    Serial.begin(9600);
+    Serial.println("System okay! \n Enter a code");
+
+    // init the keyboard
+    for (int i = 0; i < ROW; i++) {
+        pinMode(PinROWS[i], OUTPUT);
+        digitalWrite(PinROWS[i], HIGH);
+    }
+    for (int i = 0; i < COLS; i++) {
+        pinMode(PinCOLS[i], INPUT_PULLUP);
+    }
+
+    resetInput();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
+void loop(){
+    unsigned long currentTime = millis();
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    if (currentTime - lastTime >= Timeout)
+    {
+        Serial.println("Timeout: retry dirty bastard!!");
+        resetInput();
+        lastTime = currentTime;
+        buzzer_play_tone(840, 100);
+    }
+
+    for (int  Row = 0; Row < ROW; Row++)
+    {
+        digitalWrite(PinROWS[Row], LOW);
+
+        for (int cols = 0; cols < COLS; cols++)
+        {
+            if (digitalRead(PinCOLS[cols]) == LOW)
+            {
+                delay(250); // anti - rebound
+                if (digitalRead(PinCOLS[cols]) == LOW)
+                {
+                    char key = touch[Row][cols];
+                    Serial.println(key);
+                    
+
+                    if (inputPosition < 4)
+                    {
+                        Inputcode[inputPosition] = key;
+                        inputPosition++;
+                        Serial.println("Input in progress: ");
+                        Serial.println(Inputcode);
+                        lastTime = currentTime; 
+                    }
+                    
+                    if (inputPosition >= 4) 
+                    {
+                        validateCode();
+                    }
+                    
+                    while (digitalRead(PinCOLS[cols]) == LOW)
+                    {
+                        delay(250);
+                    }
+                    
+                }
+                
+            }
+            
+        }
+        digitalWrite(PinROWS[Row], HIGH);
+    }
+    
+    
 }
