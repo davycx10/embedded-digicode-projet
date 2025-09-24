@@ -3,16 +3,17 @@
 
 
 
+
 // define secret code
 
-const char* secret_code = "123A";     // secrect code 
+const char* secret_code = "2*1D";     // secrect code 
 char Inputcode[5] = {0};              // buffer for input user
 int inputPosition = 0;                // Track how many digits have already been entered in the buffer
 
 // timer for delay
 
 unsigned long lastTime = 0;
-const unsigned long Timeout = 10000;   // limit time
+const int  Timeout = 15000;   // limit time
 
 // define keyboard matix 4x4
 
@@ -49,6 +50,12 @@ void buzzer_play_tone(int freq, int duration_ms) {
     pwm_set_enabled(slice, false);
 }
 
+// define TFT
+// #define TFT_CS    17
+// #define TFT_DC    3
+// #define TFT_RST   6
+// #define TFT_BL    2
+// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // reset input
 
@@ -56,6 +63,7 @@ void resetInput(){
     inputPosition = 0;
     memset(Inputcode, 0, sizeof(Inputcode));
     Serial.println("Enter Code :");
+    // tft.println("Enter Code :");
 }
 
 // valide  the code
@@ -63,9 +71,11 @@ void validateCode(){
     if (strcmp(Inputcode, secret_code) == 0)
     {
         Serial.println("Code Accept, good job looser");
+        // tft.println("Code Accept, good job looser");
         buzzer_play_tone(440, 500);
     } else {
         Serial.println("Code reject looser");
+        // tft.println("Code reject looser");
         buzzer_play_tone(220, 500);
     }
 
@@ -75,9 +85,12 @@ void validateCode(){
 }
 
 void setup() {
+    
+     
+
     buzzer_init();
     Serial.begin(9600);
-    Serial.println("System okay! \n Enter a code");
+    // Serial.println("System okay! \n Enter a code");
 
     // init the keyboard
     for (int i = 0; i < ROW; i++) {
@@ -94,9 +107,10 @@ void setup() {
 void loop(){
     unsigned long currentTime = millis();
 
-    if (currentTime - lastTime >= Timeout)
+    if (currentTime - lastTime >= (unsigned long)Timeout)
     {
-        Serial.println("Timeout: retry dirty bastard!!");
+        Serial.println("Timeout: retry looser!!");
+        // tft.println("Timeout: retry looser!!");
         resetInput();
         lastTime = currentTime;
         buzzer_play_tone(840, 100);
@@ -123,6 +137,9 @@ void loop(){
                         inputPosition++;
                         Serial.println("Input in progress: ");
                         Serial.println(Inputcode);
+
+                        // tft.println("Input in progress: ");
+                        // tft.println(Inputcode);
                         lastTime = currentTime; 
                     }
                     
