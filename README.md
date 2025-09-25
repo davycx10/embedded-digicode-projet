@@ -17,6 +17,7 @@ Je me suis lancé dans un projet avec mon **Raspberry Pi Pico** pour créer un p
 - Un clavier matriciel (utilisé pour saisir le code).
 - Un écran (LCD, OLED, ou via la console) pour afficher les messages.
 - Câbles pour connecter le clavier et l'écran.
+- led 
 
 ## Logiciel requis
 
