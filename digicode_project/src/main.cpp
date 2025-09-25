@@ -78,8 +78,6 @@ void ledGreen_blink(){
 }
 
 
-
-
 // reset input
 
 void resetInput(){
