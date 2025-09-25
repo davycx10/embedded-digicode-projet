@@ -72,7 +72,7 @@ void ledGreen_init(){
 
 void ledGreen_blink(){
     digitalWrite(LEDGREEN_PIN, HIGH); // Allumer la LED
-  delay(1000);                  // Attendre 500 ms
+  delay(2000);                  // Attendre 500 ms
   digitalWrite(LEDGREEN_PIN, LOW);  // Éteindre la LED
   delay(500);
 }
