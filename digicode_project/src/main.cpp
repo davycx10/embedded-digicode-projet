@@ -50,12 +50,35 @@ void buzzer_play_tone(int freq, int duration_ms) {
     pwm_set_enabled(slice, false);
 }
 
-// define TFT
-// #define TFT_CS    17
-// #define TFT_DC    3
-// #define TFT_RST   6
-// #define TFT_BL    2
-// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+// define led blue
+#define LEDBLUE_PIN 16
+
+void ledBlue_init(){
+     pinMode(LEDBLUE_PIN, OUTPUT);
+}
+
+void ledBlue_blink(){
+    digitalWrite(LEDBLUE_PIN, HIGH); // Allumer la LED
+  delay(1000);                  // Attendre 500 ms
+  digitalWrite(LEDBLUE_PIN, LOW);  // Éteindre la LED
+  delay(500);    
+}
+
+// define led green
+#define LEDGREEN_PIN 17
+void ledGreen_init(){
+    pinMode(LEDGREEN_PIN, OUTPUT);
+}
+
+void ledGreen_blink(){
+    digitalWrite(LEDGREEN_PIN, HIGH); // Allumer la LED
+  delay(1000);                  // Attendre 500 ms
+  digitalWrite(LEDGREEN_PIN, LOW);  // Éteindre la LED
+  delay(500);
+}
+
+
+
 
 // reset input
 
@@ -64,6 +87,7 @@ void resetInput(){
     memset(Inputcode, 0, sizeof(Inputcode));
     Serial.println("Enter Code :");
     // tft.println("Enter Code :");
+    
 }
 
 // valide  the code
@@ -73,10 +97,12 @@ void validateCode(){
         Serial.println("Code Accept, good job looser");
         // tft.println("Code Accept, good job looser");
         buzzer_play_tone(440, 500);
+        ledBlue_blink();
     } else {
         Serial.println("Code reject looser");
         // tft.println("Code reject looser");
         buzzer_play_tone(220, 500);
+        ledGreen_blink();
     }
 
     delay(2000);
@@ -86,8 +112,8 @@ void validateCode(){
 
 void setup() {
     
-     
-
+    ledGreen_init();
+    ledBlue_init();
     buzzer_init();
     Serial.begin(9600);
     // Serial.println("System okay! \n Enter a code");
@@ -114,6 +140,7 @@ void loop(){
         resetInput();
         lastTime = currentTime;
         buzzer_play_tone(840, 100);
+        
     }
 
     for (int  Row = 0; Row < ROW; Row++)
@@ -146,6 +173,7 @@ void loop(){
                     if (inputPosition >= 4) 
                     {
                         validateCode();
+                        
                     }
                     
                     while (digitalRead(PinCOLS[cols]) == LOW)
