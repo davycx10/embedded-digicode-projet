@@ -78,13 +78,27 @@ void ledGreen_blink(){
 }
 
 
+#define LEDB_PIN 12
+
+void ledB_init(){
+    pinMode(LEDB_PIN, OUTPUT);
+}
+
+void ledB_blink(){
+    digitalWrite(LEDB_PIN, HIGH); // Allumer la LED
+  delay(3000);                  // Attendre 500 ms
+  digitalWrite(LEDB_PIN, LOW);  // Éteindre la LED
+  delay(500);
+}
+
+
 // reset input
 
 void resetInput(){
     inputPosition = 0;
     memset(Inputcode, 0, sizeof(Inputcode));
     Serial.println("Enter Code :");
-    // tft.println("Enter Code :");
+    
     
 }
 
@@ -94,12 +108,12 @@ void validateCode(){
     {
         Serial.println("Code Accept, good job looser");
         // tft.println("Code Accept, good job looser");
-        buzzer_play_tone(440, 500);
+        buzzer_play_tone(5000, 500);
         ledBlue_blink();
     } else {
         Serial.println("Code reject looser");
         // tft.println("Code reject looser");
-        buzzer_play_tone(220, 500);
+        buzzer_play_tone(3000, 500);
         ledGreen_blink();
     }
 
@@ -109,7 +123,7 @@ void validateCode(){
 }
 
 void setup() {
-    
+    ledB_init();
     ledGreen_init();
     ledBlue_init();
     buzzer_init();
@@ -135,9 +149,10 @@ void loop(){
     {
         Serial.println("Timeout: retry looser!!");
         // tft.println("Timeout: retry looser!!");
+        buzzer_play_tone(2500, 500);
+        ledB_blink();
         resetInput();
         lastTime = currentTime;
-        buzzer_play_tone(840, 100);
         
     }
 
